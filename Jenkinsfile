@@ -1,33 +1,47 @@
 
 pipeline {
-    agent any
+    agent {
+        label 'python-agent'
+    }
+
+    options {
+        timestamps()
+    }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Preparing AWS DevOps source code'
+                echo 'Source code retrieved from GitHub'
             }
         }
 
-        stage('Build') {
+        stage('Install Dependencies') {
             steps {
-                echo 'Building FastAPI application'
+                sh '''
+                    python3 --version
+                    python3 -m venv .venv
+                    .venv/bin/python -m pip install --upgrade pip
+                    .venv/bin/python -m pip install -r requirements.txt
+                '''
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
-                echo 'Pytest integration coming next'
+                sh '''
+                    .venv/bin/python -m pytest tests/ -v
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'AWS DevOps pipeline succeeded!'
+            echo 'SUCCESS: All automated tests passed!'
         }
+
         failure {
-            echo 'AWS DevOps pipeline failed!'
+            echo 'FAILURE: Check the pipeline logs.'
         }
     }
 }
